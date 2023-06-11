@@ -3,6 +3,8 @@ package transactionrepository
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"log"
 
 	"github.com/vanneeza/e-commerce-lite/internal/domain/entity"
 	"github.com/vanneeza/e-commerce-lite/utils/helper"
@@ -68,4 +70,27 @@ func (*TransactionRepositoryImpl) UpdateStatusDetail(ctx context.Context, tx *sq
 	helper.PanicError(err)
 
 	return nil
+}
+
+func (*TransactionRepositoryImpl) FindOrderById(ctx context.Context, tx *sql.Tx, detailId string) (entity.Order, error) {
+	log.Println(detailId, "repo tx")
+
+	SQL := "SELECT id, qty, product_id, customer_id, store_id, tx_detail_id FROM tx_order WHERE tx_detail_id = $1"
+	rows, err := tx.QueryContext(ctx, SQL, detailId)
+	defer rows.Close()
+	helper.PanicError(err)
+
+	var order entity.Order
+	if rows.Next() {
+		err := rows.Scan(&order.Id, &order.Qty, &order.ProductId, &order.CustomerId, &order.StoreId, &order.TxDetailId)
+		helper.PanicError(err)
+		log.Println(order, "repo tx tengah")
+
+		return order, nil
+	} else {
+		log.Println(order, "repo tx bawah")
+
+		return order, errors.New("order data not found")
+	}
+
 }

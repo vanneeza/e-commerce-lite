@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 
 	"github.com/vanneeza/e-commerce-lite/internal/domain/entity"
 	"github.com/vanneeza/e-commerce-lite/utils/helper"
@@ -41,6 +42,7 @@ func (repository *StoreRepositoryImpl) Delete(ctx context.Context, tx *sql.Tx, s
 }
 
 func (repository *StoreRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx, storeId string) (entity.Store, error) {
+	log.Println(storeId, "repo store atas")
 	SQL := "SELECT id, name, email, no_hp, address, balance FROM tbl_store WHERE id = $1 AND is_deleted = false"
 	rows, err := tx.QueryContext(ctx, SQL, storeId)
 	helper.PanicError(err)
@@ -51,6 +53,8 @@ func (repository *StoreRepositoryImpl) FindById(ctx context.Context, tx *sql.Tx,
 	if rows.Next() {
 		err := rows.Scan(&store.Id, &store.Name, &store.Email, &store.NoHp, &store.Address, &store.Balance)
 		helper.PanicError(err)
+		log.Println(store, "repo store tengah")
+
 		return store, nil
 	} else {
 		return store, errors.New("store is not found")

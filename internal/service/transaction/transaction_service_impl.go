@@ -3,6 +3,9 @@ package transactionservice
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/segmentio/ksuid"
@@ -101,15 +104,39 @@ func (ts *TransactionServiceImpl) SaveCallBack(ctx context.Context, req transact
 	}
 	_, errCallback := ts.TxRepository.TxRepository.CreateCallback(ctx, tx, callback)
 	helper.PanicError(errCallback)
+	log.Println(callback.Status, "callback status")
+	fmt.Scanln()
 
 	if callback.Status == "PAID" {
 		err2 := ts.TxRepository.TxRepository.UpdateStatusDetail(ctx, tx, callback)
 		helper.PanicError(err2)
+
+		order, err4 := ts.TxRepository.TxRepository.FindOrderById(ctx, tx, callback.DetailId)
+		helper.PanicError(err4)
+
+		s, err5 := ts.TxRepository.StoreRepository.FindById(ctx, tx, order.StoreId.Id)
+		helper.PanicError(err5)
+
+		log.Println(order, "order")
+		log.Println(s, "store")
+		addBalance := s.Balance + int64(callback.Amount)
+
+		store := entity.Store{
+			Id:      s.Id,
+			Name:    s.Name,
+			Email:   s.Email,
+			NoHp:    s.NoHp,
+			Address: s.Address,
+			Balance: addBalance,
+		}
+		log.Println(addBalance, "add balance")
+		fmt.Scanln()
+		_, err6 := ts.TxRepository.StoreRepository.Update(ctx, tx, store)
+		helper.PanicError(err6)
+
 		return nil
+	} else {
+		return errors.New("transaction was failed")
 	}
 
-	err3 := ts.TxRepository.TxRepository.UpdateStatusDetail(ctx, tx, callback)
-	helper.PanicError(err3)
-
-	return nil
 }

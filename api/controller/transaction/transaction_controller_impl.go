@@ -127,6 +127,7 @@ func (tc *TransactionControllerImpl) XenditCallback(ctx *gin.Context) {
 	} else {
 		log.Println("success save callback")
 		log.Println("update status detail with ID: " + callbackData.DetailId)
+		log.Println("add balance store with ID: Belum di set")
 	}
 }
 
